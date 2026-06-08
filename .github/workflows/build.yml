@@ -6,31 +6,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip
+      
+      - name: Unzip project code
         run: unzip -q aura-athletics.zip -d src
-      - name: Build
+      
+      - name: Build with Gradle
         run: |
-          # 1. Делаем все найденные gradlew исполняемыми
-          find src -name "gradlew" -exec chmod +x {} \;
-          
-          # 2. Ищем папку, где лежит build.gradle
+          # 1. Ищем папку, где лежит build.gradle
           PROJECT_DIR=$(find src -name "build.gradle*" -exec dirname {} \; | head -n 1)
           echo "Собираем проект в: $PROJECT_DIR"
           
-          # 3. Ищем, где лежит ближайший к проекту gradlew
+          # 2. Ищем gradlew в этой папке
           GRADLEW_PATH=$(find "$PROJECT_DIR" -maxdepth 2 -name "gradlew" | head -n 1)
           
+          # 3. Переходим в нужную папку
           cd "$PROJECT_DIR"
           
-          # 4. Запускаем сборку
+          # 4. Запускаем сборку (флаг -x validateSigningDebug пропускает проверку ключей)
           if [ -n "$GRADLEW_PATH" ]; then
-            echo "Используем gradlew"
-            ./gradlew assembleDebug
+            chmod +x gradlew
+            ./gradlew assembleDebug -x validateSigningDebug
           else
-            echo "gradlew не найден, пробуем глобальный gradle"
-            gradle assembleDebug
+            gradle assembleDebug -x validateSigningDebug
           fi
-      - name: Upload
+          
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
