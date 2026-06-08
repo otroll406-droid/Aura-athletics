@@ -16,12 +16,16 @@ jobs:
           PROJECT_DIR=$(find src -name "build.gradle*" -exec dirname {} \; | head -n 1)
           cd "$PROJECT_DIR"
           
-          # Устанавливаем права и собираем, пропуская все проверки подписи
+          # Генерируем "пустой" ключ debug.keystore, чтобы Gradle перестал ругаться
+          keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 365 \
+            -keystore debug.keystore -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+            
+          # Собираем проект
           if [ -f "gradlew" ]; then
             chmod +x gradlew
-            ./gradlew assembleDebug -x signDebug -x validateSigningDebug
+            ./gradlew assembleDebug
           else
-            gradle assembleDebug -x signDebug -x validateSigningDebug
+            gradle assembleDebug
           fi
           
       - name: Upload APK
@@ -29,3 +33,4 @@ jobs:
         with:
           name: app-debug
           path: src/**/build/outputs/apk/debug/*.apk
+          
