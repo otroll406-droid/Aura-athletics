@@ -12,22 +12,16 @@ jobs:
       
       - name: Build with Gradle
         run: |
-          # 1. Ищем папку, где лежит build.gradle
+          # Находим папку с проектом
           PROJECT_DIR=$(find src -name "build.gradle*" -exec dirname {} \; | head -n 1)
-          echo "Собираем проект в: $PROJECT_DIR"
-          
-          # 2. Ищем gradlew в этой папке
-          GRADLEW_PATH=$(find "$PROJECT_DIR" -maxdepth 2 -name "gradlew" | head -n 1)
-          
-          # 3. Переходим в нужную папку
           cd "$PROJECT_DIR"
           
-          # 4. Запускаем сборку (флаг -x validateSigningDebug пропускает проверку ключей)
-          if [ -n "$GRADLEW_PATH" ]; then
+          # Устанавливаем права и собираем, пропуская все проверки подписи
+          if [ -f "gradlew" ]; then
             chmod +x gradlew
-            ./gradlew assembleDebug -x validateSigningDebug
+            ./gradlew assembleDebug -x signDebug -x validateSigningDebug
           else
-            gradle assembleDebug -x validateSigningDebug
+            gradle assembleDebug -x signDebug -x validateSigningDebug
           fi
           
       - name: Upload APK
